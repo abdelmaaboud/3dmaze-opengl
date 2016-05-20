@@ -1,0 +1,47 @@
+#version 330 core
+
+
+// Ouput data
+out vec3 color;
+
+
+in vec3 theColor;
+in vec2 TexCoord;
+
+in vec3 position_worldspace;
+in vec3 normal_worldspace;
+
+uniform vec3 LightPosition_worldspace;
+uniform vec3 EyePosition_worldspace;
+uniform vec3 ambientLight;
+uniform vec3 diffuseLight;
+uniform vec3 specularLight;
+
+uniform vec3 myColor;
+uniform sampler2D myTextureSampler;
+
+void main()
+{
+
+	// we set the color of each fragment to sent texture.
+	vec3 finalColor = texture(myTextureSampler,TexCoord).rgb;
+
+	vec3 lightVector = normalize(LightPosition_worldspace - position_worldspace);
+	float cos_theta = dot(lightVector,normal_worldspace);	
+	cos_theta = clamp(cos_theta,0,1);
+	vec3 diffuse = diffuseLight*finalColor*cos_theta;
+
+	//Specular light calculations.
+	vec3 reflectedLightVector = reflect(-lightVector,normal_worldspace);
+	vec3 eyeDirectionVector = normalize(EyePosition_worldspace - position_worldspace);
+	float cos_alpha = dot(reflectedLightVector,eyeDirectionVector);
+	cos_alpha = clamp(cos_alpha,0,1);	
+	vec3 specular = specularLight*finalColor*cos_alpha;
+
+	//ambient
+	vec3 ambient =  ambientLight*finalColor;
+	//vec3 gamma = vec3 (1.0/2.2);
+	//color= vec4(pow(linearColor,gamma),final);
+	color=ambient + diffuse + specular;
+
+}
